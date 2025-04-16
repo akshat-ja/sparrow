@@ -1,9 +1,10 @@
+use jagua_rs::collision_detection::hazards::filter::NoHazardFilter;
 use crate::eval::sample_eval::{SampleEval, SampleEvaluator};
-use jagua_rs::entities::item::Item;
-use jagua_rs::entities::layout::Layout;
-use jagua_rs::geometry::d_transformation::DTransformation;
+use jagua_rs::entities::general::Item;
+use jagua_rs::entities::general::Layout;
+use jagua_rs::geometry::DTransformation;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
-use jagua_rs::geometry::primitives::simple_polygon::SimplePolygon;
+use jagua_rs::geometry::primitives::SimplePolygon;
 
 pub const X_MULTIPLIER: f32 = 10.0;
 pub const Y_MULTIPLIER: f32 = 1.0;
@@ -34,11 +35,11 @@ impl<'a> SampleEvaluator for LBFEvaluator<'a> {
         self.n_evals += 1;
         let cde = self.layout.cde();
         let transf = dt.into();
-        match cde.surrogate_collides(self.item.shape.surrogate(), &transf, &[]) {
+        match cde.surrogate_collides(self.item.shape.surrogate(), &transf, &NoHazardFilter) {
             true => SampleEval::Invalid, // Surrogate collides with something
             false => {
                 self.shape_buff.transform_from(&self.item.shape, &transf);
-                match cde.poly_collides(&self.shape_buff, &[]) {
+                match cde.poly_collides(&self.shape_buff, &NoHazardFilter) {
                     true => SampleEval::Invalid, // Exact shape collides with something
                     false => {
                         // No collisions

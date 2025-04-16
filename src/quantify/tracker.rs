@@ -1,11 +1,10 @@
+use jagua_rs::collision_detection::hazards::detector::{BasicHazardDetector, HazardDetector};
+use jagua_rs::collision_detection::hazards::HazardEntity;
+use jagua_rs::entities::general::{Layout, PItemKey};
 use crate::config::{WEIGHT_DECAY, WEIGHT_MAX_INC_RATIO, WEIGHT_MIN_INC_RATIO};
 use crate::quantify::pair_matrix::PairMatrix;
 use crate::quantify::{quantify_collision_poly_bin, quantify_collision_poly_poly};
 use crate::util::assertions::tracker_matches_layout;
-use jagua_rs::collision_detection::hazard::HazardEntity;
-use jagua_rs::collision_detection::hazard_helpers::HazardDetector;
-use jagua_rs::entities::layout::Layout;
-use jagua_rs::entities::placed_item::PItemKey;
 use ordered_float::Float;
 use slotmap::SecondaryMap;
 
@@ -57,10 +56,13 @@ impl CollisionTracker {
         self.bin_collisions[idx].loss = 0.0;
 
         // Compute which hazards are currently colliding with the item
-        let detected = l.cde().collect_poly_collisions(shape, &[(pk, pi).into()]);
+        let mut detector = BasicHazardDetector::new();
+        l.cde().collect_poly_collisions(shape, &mut detector);
+        // Remove the item itself from the detector
+        detector.remove(&HazardEntity::from((pk, pi)));
 
         // For each colliding hazard, quantify the collision and store it in the tracker
-        for haz in detected.iter() {
+        for haz in detector.iter() {
             match haz {
                 HazardEntity::PlacedItem { pk: other_pk, .. } => {
                     let shape_other = &l.placed_items[*other_pk].shape;
@@ -80,19 +82,19 @@ impl CollisionTracker {
         }
     }
 
-    pub fn restore_but_keep_weights(&mut self, ots: &CTSnapshot, layout: &Layout) {
+    pub fn restore_but_keep_weights(&mut self, cts: &CTSnapshot, layout: &Layout) {
         //Copy the loss and keys, but keep the weights
-        self.pk_idx_map = ots.pk_idx_map.clone();
+        self.pk_idx_map = cts.pk_idx_map.clone();
         self.pair_collisions.data.iter_mut()
-            .zip(ots.pair_collisions.data.iter())
+            .zip(cts.pair_collisions.data.iter())
             .for_each(|(a, b)| a.loss = b.loss);
         self.bin_collisions.iter_mut()
-            .zip(ots.bin_collisions.iter())
+            .zip(cts.bin_collisions.iter())
             .for_each(|(a, b)| a.loss = b.loss);
         debug_assert!(tracker_matches_layout(self, layout));
     }
 
-    pub fn create_snapshot(&self) -> CTSnapshot {
+    pub fn save(&self) -> CTSnapshot {
         self.clone()
     }
 
