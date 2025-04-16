@@ -74,7 +74,7 @@ pub const FIN_REF_CD_RATIOS: (f32, f32) = (0.01, 0.001);
 /// If two samples are closer than this ratio of the item's min dimension, they are considered duplicates
 pub const UNIQUE_SAMPLE_THRESHOLD: f32 = 0.05;
 
-pub const OUTPUT_DIR: &str = "output";
+pub const OUTPUT_DIR: &str = "build/svg";
 
 pub const LIVE_DIR: &str = "data/live";
 
