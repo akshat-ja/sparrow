@@ -8,7 +8,7 @@ use jagua_rs::entities::general::Instance;
 use jagua_rs::entities::strip_packing::SPInstance;
 use svg::Document;
 
-use crate::config::{OUTPUT_DIR};
+use crate::config::OUTPUT_DIR;
 use crate::EPOCH;
 use jagua_rs::io::json_instance::JsonInstance;
 
