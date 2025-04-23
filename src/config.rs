@@ -1,14 +1,13 @@
+use jagua_rs::collision_detection::CDEConfig;
+use jagua_rs::geometry::fail_fast::SPSurrogateConfig;
 use crate::optimizer::separator::SeparatorConfig;
 use crate::sample::search::SampleConfig;
 use crate::util::io::svg_util::{SvgDrawOptions, SvgLayoutTheme};
-use jagua_rs::util::{CDEConfig, SPSurrogateConfig};
-use jagua_rs::util::PolySimplConfig;
 
 pub const RNG_SEED: Option<usize> = None;
 
 pub const CDE_CONFIG: CDEConfig = CDEConfig {
     quadtree_depth: 4,
-    hpg_n_cells: 0,
     item_surrogate_config: SPSurrogateConfig {
         n_pole_limits: [(64, 0.0), (16, 0.8), (8, 0.9)],
         n_ff_poles: 2,
@@ -16,12 +15,16 @@ pub const CDE_CONFIG: CDEConfig = CDEConfig {
     },
 };
 
-/// Simplifies the items exclusively outwards (inflating the shape)
-/// The simplification stops when the area(simplified) > area(original) * (1.0 + tolerance)
-/// Switch to [PolySimplConfig::Disabled] to disable any simplification
-pub const SIMPLIFICATION_CONFIG: PolySimplConfig = PolySimplConfig::Enabled{
-    tolerance: 0.001
-};
+/// Defines the polygon simplification tolerance: maximum allowable inflation of items when simplifying their shape.
+/// Disabled if `None`.
+/// See [`jagua_rs::io::parser::Parser::new`] for more details.
+pub const SIMPL_TOLERANCE: Option<f32> = Some(0.001);
+
+
+/// Defines the minimum distance between items and other hazards.
+/// Disabled if `None`.
+/// See [`jagua_rs::io::parser::Parser::new`] for more details.
+pub const MIN_ITEM_SEPARATION: Option<f32> = None;
 
 pub const EXPLORE_SHRINK_STEP: f32 = 0.001;
 pub const EXPLORE_SOL_DISTR_STDDEV: f32 = 0.25;
@@ -88,9 +91,10 @@ pub const LARGE_AREA_CH_AREA_CUTOFF_RATIO: f32 = 0.5;
 pub const DRAW_OPTIONS: SvgDrawOptions = SvgDrawOptions {
     theme: SvgLayoutTheme::GRAY_THEME,
     quadtree: false,
-    haz_prox_grid: false,
     surrogate: false,
     highlight_collisions: true,
+    draw_cd_shapes: false,
+    highlight_cd_shapes: true,
 };
 
 pub const LBF_SAMPLE_CONFIG: SampleConfig = SampleConfig {

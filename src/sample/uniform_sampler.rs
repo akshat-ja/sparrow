@@ -1,11 +1,11 @@
 use itertools::Itertools;
-use jagua_rs::geometry::geo_enums::AllowedRotation;
+use jagua_rs::geometry::geo_enums::RotationRange;
 use jagua_rs::geometry::geo_traits::{Shape, TransformableFrom};
 use rand::prelude::IndexedRandom;
 use rand::Rng;
 use std::ops::Range;
 use jagua_rs::entities::general::Item;
-use jagua_rs::geometry::primitives::AARectangle;
+use jagua_rs::geometry::primitives::Rect;
 use jagua_rs::geometry::{DTransformation, Transformation};
 
 /// A sampler that creates uniform samples for an item within a bounding box
@@ -23,14 +23,14 @@ struct RotEntry {
 }
 
 impl UniformBBoxSampler {
-    pub fn new(sample_bbox: AARectangle, item: &Item, bin_bbox: AARectangle) -> Option<Self> {
+    pub fn new(sample_bbox: Rect, item: &Item, bin_bbox: Rect) -> Option<Self> {
         let rotations = match &item.allowed_rotation {
-            AllowedRotation::None => &vec![0.0],
-            AllowedRotation::Discrete(r) => r,
-            AllowedRotation::Continuous => unreachable!(),
+            RotationRange::None => &vec![0.0],
+            RotationRange::Discrete(r) => r,
+            RotationRange::Continuous => unimplemented!("Continuous rotation not supported"),
         };
 
-        let mut shape_buffer = item.shape.as_ref().clone();
+        let mut shape_buffer = item.shape_cd.as_ref().clone();
 
         let sample_x_range = sample_bbox.x_min..sample_bbox.x_max;
         let sample_y_range = sample_bbox.y_min..sample_bbox.y_max;
@@ -39,7 +39,7 @@ impl UniformBBoxSampler {
         // where the item resides fully inside the bin and is within the sample bounding box
         let rot_entries = rotations.iter()
             .map(|&r| {
-                let r_shape_bbox = shape_buffer.transform_from(item.shape.as_ref(), &Transformation::from_rotation(r)).bbox();
+                let r_shape_bbox = shape_buffer.transform_from(item.shape_cd.as_ref(), &Transformation::from_rotation(r)).bbox();
 
                 //narrow the bin range to account for the rotated shape
                 let bin_x_range = (bin_bbox.x_min - r_shape_bbox.x_min)..(bin_bbox.x_max - r_shape_bbox.x_max);
